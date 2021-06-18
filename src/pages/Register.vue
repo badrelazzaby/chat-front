@@ -12,12 +12,13 @@
               >
             </div>
             <label for="username" class="form-label">Username :</label>
-            <input type="text" class="form-control" placeholder="username.." />
+            <input type="text" class="form-control" v-model="username" placeholder="username.." />
             <label for="password" class="form-label">Password :</label>
             <input
               type="text"
               class="form-control"
               placeholder="passoword..."
+              v-model="password"
             />
             <a
               href="/login"
@@ -32,10 +33,25 @@
   </div>
 </template>
 <script>
+import axios from "axios";
+
 export default {
   name: "Register",
   components: {},
-  data() {},
+  data() {
+    return {
+      username: '',
+      password: ''    
+    }
+  },
+  methods: {
+    async Register() {
+      axios.post(`http://localhost:5000/api/user/register`, {
+        username: this.username,
+        password: this.password 
+      })
+    }
+  }
 };
 </script>
 <style>
