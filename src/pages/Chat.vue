@@ -1,4 +1,10 @@
 <template>
+  <div class="logout">
+    <button class="btn btn-outline-primary" @click="logOut()">Logout</button>
+    <p>
+      
+    </p>
+  </div>
   <div class="main">
     <div class="message-content">
       <div class="messages" v-for="(msg, index) in messages" :key="index">
@@ -24,16 +30,21 @@
 <script>
 import axios from "axios";
 import * as io from "socket.io-client";
+import router from "../routes/index";
 export default {
   name: "Chat",
 
   data() {
     return {
       socket: io("http://localhost:5000"),
-      users: [],
+      curentUser: {},
       message: "",
       messages: [],
     };
+  },
+  created: async function () {
+    let data_user = await localStorage.getItem("user");
+    console.log('-----', data_user);
   },
   mounted: function () {
     this.socket.on("message", (data) => {
@@ -41,6 +52,7 @@ export default {
     });
   },
   methods: {
+
     async sendMessage() {
       await axios.post(`http://localhost:5000/api/message/store-message`, {
         message: this.message,
@@ -49,6 +61,10 @@ export default {
         message: this.message,
       });
       this.message = "";
+    },
+    logOut() {
+      localStorage.removeItem("user");
+      router.replace("login");
     },
   },
 };

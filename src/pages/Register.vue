@@ -7,12 +7,18 @@
         <form action="">
           <div class="form-group">
             <div class="form-group">
-              <h1 class="text-warning"
-                >Chat with Universe</h1
+              <h1 class="text-warning">Chat with Universe</h1>
+              <label class="text-danger" v-if="error"
+                >Username and password required *</label
               >
             </div>
             <label for="username" class="form-label">Username :</label>
-            <input type="text" class="form-control" v-model="username" placeholder="username.." />
+            <input
+              type="text"
+              class="form-control"
+              v-model="username"
+              placeholder="username.."
+            />
             <label for="password" class="form-label">Password :</label>
             <input
               type="text"
@@ -21,7 +27,7 @@
               v-model="password"
             />
             <a
-              href="/login"
+              @click="Register()"
               class="btn btn-outline-warning text-center mt-3"
               type="button"
               >Register</a
@@ -34,24 +40,38 @@
 </template>
 <script>
 import axios from "axios";
+import { ref } from "vue";
+import router from "../routes/index";
 
 export default {
   name: "Register",
   components: {},
-  data() {
+  setup() {
+    var username = ref("");
+    var password = ref("");
+    var error = ref(false);
+    async function Register() {
+      await axios
+        .post(`http://localhost:5000/api/user/register`, {
+          username: this.username,
+          password: this.password,
+        })
+        .then(function () {
+          router.replace("login");
+        })
+        .catch((err) => {
+          this.error = true;
+          console.log(`can not register : ${err}`);
+        });
+    }
+
     return {
-      username: '',
-      password: ''    
-    }
+      username,
+      password,
+      Register,
+      error,
+    };
   },
-  methods: {
-    async Register() {
-      axios.post(`http://localhost:5000/api/user/register`, {
-        username: this.username,
-        password: this.password 
-      })
-    }
-  }
 };
 </script>
 <style>
