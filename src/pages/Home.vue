@@ -4,7 +4,6 @@
       <div class="col-12 col-lg-7 left-side"></div>
       <div class="col-12 col-lg-5 px-5 right-side">
         <h1 class="text-primary p-5">
-          <i class="fa fa-wechat fa-2x pr-2"></i>
           Galaxy Chat 
         </h1>
         <h5 class="px-5">Join Us Now: </h5>
