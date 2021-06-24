@@ -26,7 +26,8 @@
             href="#"
             class="btn btn-outline-info text-center mt-3"
             type="button"
-            @click="Login()"
+            @click="Login()
+            "
             >Login</a
           >
         </div>
@@ -54,9 +55,10 @@ export default {
           .post(`http://localhost:5000/api/user/login`, {
             username: this.username,
             password: this.password,
+            online: true
           })
           .then(async (response) => {
-            router.replace("chat");
+            router.push("/chat");
             await localStorage.setItem("user", JSON.stringify(response.data));
           });
       } catch (error) {
@@ -64,12 +66,26 @@ export default {
         this.errorMessage = error.response.data.message
       }
     }
+
+    // async function setOnlineUser() {
+    //   await axios 
+    //     .put(`http://localhost:5000/api/user/online-user`, {
+    //       online : true
+    //     }).then(data => {
+    //       console.log(`set online users`,data);
+    //     })
+    //     .catch(error => {
+    //       console.log(`Error set online users`,error);
+    //     })
+    // }
+
     return {
       username,
       password,
       Login,
       errorMessage,
-      hasError
+      hasError,
+      
     };
   },
 };

@@ -44,7 +44,7 @@
           v-model="message"
           placeholder="type..."
         />
-        <button class="btn-send-message" @click="sendMessage()">
+        <button class="btn-send-message" @click.prevent="sendMessage()">
           <i class="far fa-paper-plane"></i> send
         </button>
       </div>
@@ -56,59 +56,59 @@
 import axios from "axios";
 import * as io from "socket.io-client";
 import router from "../routes/index";
+import { ref, reactive, onMounted, onUpdated, onUnmounted } from "vue";
 
 export default {
   name: "Chat",
 
-  data() {
-    return {
-      socket: io("http://localhost:5000"),
-      message: "",
-      messages: [],
-      users: [],
-      lastUser: "",
-      curentUser: JSON.parse(localStorage.getItem("user")),
-    };
-  },
-  updated() {
-    let divScroll = document.querySelector(".message-content");
-    divScroll.scrollTop = 999999999999999;
-  },
+  setup() {
+    let message = ref("");
+    let messages = reactive([]);
+    let users = reactive([]);
+    let usersCache = reactive([]);
+    let lastUser = ref("");
+    let curentUser = JSON.parse(localStorage.getItem("user"));
+    let socket = io("http://localhost:5000");
 
-  mounted() {
-    this.socket.on("message", (data) => {
-      this.messages.push(data);
-    });
-    this.socket.emit("user-connection", this.curentUser.user.username);
-    this.socket.on("user-connected", async (data) => {
-      await this.users.push(data);
+    onUpdated(() => {
+      let divScroll = document.querySelector(".message-content");
+      divScroll.scrollTop = 999999999999999;
     });
 
-    this.getAllUserMessages();
-  },
-  methods: {
-    async sendMessage() {
+    onMounted(() => {
+      socket.on("message", (data) => {
+        messages.push(data);
+      });
+      getAllUserMessages();
+      getOnlineUsers()
+    });
+
+    onUnmounted(() => {
+      logOut()
+    })
+
+    async function sendMessage() {
       await axios.post(
         `http://localhost:5000/api/message/store-message`,
-        { message: this.message, userId: this.curentUser.user._id },
-        { headers: { "x-access-token": this.curentUser.token } }
+        { message: message.value, userId: curentUser.user._id },
+        { headers: { "x-access-token": curentUser.token } }
       );
 
-      this.socket.emit("send-message", {
-        message: this.message,
-        username: this.curentUser.user.username,
+      socket.emit("send-message", {
+        message: message.value,
+        username: curentUser.user.username,
       });
-      this.message = "";
-    },
-    async getAllUserMessages() {
+      message = "";
+    }
+    async function getAllUserMessages() {
       axios
         .get(
-          `http://localhost:5000/api/message/all-messages/${this.curentUser.user._id}`,
-          { headers: { "x-access-token": this.curentUser.token } }
+          `http://localhost:5000/api/message/all-messages/${curentUser.user._id}`,
+          { headers: { "x-access-token": curentUser.token } }
         )
         .then(async (response) => {
           for (let i = 0; i < response.data.length; i++) {
-            await this.messages.push({
+            await messages.push({
               message: response.data[i].message,
               username: response.data[i].userId.username,
             });
@@ -117,11 +117,47 @@ export default {
         .catch((error) => {
           console.log(`-error getting messages-`, error);
         });
-    },
-    async logOut() {
+    }
+
+    async function getOnlineUsers() {
+      await axios
+        .get(`http://localhost:5000/api/user/online-users`)
+        .then((response) => {
+          console.log(response.data.username);
+          // let element = 0
+          // for (element in data ) {
+          //   users.push(data[element].username)
+          //   // console.log(`users online ${users}`);
+          // }
+          
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+    }
+
+    async function logOut() {
+      await axios 
+        .put(`http://localhost:5000/api/user/offline-user/${curentUser.user._id}`, {
+          online: false
+        })
       await localStorage.removeItem("user");
       router.replace("login");
-    },
+    }
+
+    return {
+      socket,
+      message,
+      messages,
+      users,
+      usersCache,
+      lastUser,
+      curentUser,
+      logOut,
+      getAllUserMessages,
+      sendMessage,
+      getOnlineUsers
+    };
   },
 };
 </script>
